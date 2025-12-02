@@ -22,6 +22,15 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <span>Scadenziario</span>
             <span>lotti</span>
           </a>
+           <a href="/intake" className="protected-nav-link">
+            <span>Carico lotti negozio</span>
+            <span>➕</span>
+          </a>
+            <a href="/accounts" className="protected-nav-link">
+            <span>Account</span>
+            <span>admin</span>
+          </a>
+
         </nav>
 
         <div className="protected-sidebar-footer">
