@@ -16,12 +16,14 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           </a>
           <a href="/stores" className="protected-nav-link">
             <span>Negozi</span>
-            <span>108</span>
+            <span className="protected-nav-count">108</span>
           </a>
+
           <a href="/inventory" className="protected-nav-link">
             <span>Scadenziario</span>
-            <span>lotti</span>
+            <span className="protected-nav-count">lotti</span>
           </a>
+
            <a href="/intake" className="protected-nav-link">
             <span>Carico lotti negozio</span>
             <span>➕</span>
