@@ -19,6 +19,8 @@ type InventoryRow = {
   } | null;
 };
 
+type RangeKey = '<=7' | '8-30' | '31-90' | '>90';
+
 function daysUntil(dateStr: string) {
   const target = new Date(dateStr);
   const now = new Date();
@@ -26,11 +28,21 @@ function daysUntil(dateStr: string) {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function classifyRange(d: number): RangeKey {
+  if (d <= 7) return '<=7'; // scaduto incluso
+  if (d <= 30) return '8-30';
+  if (d <= 90) return '31-90';
+  return '>90';
+}
+
 export default function InventoryPage() {
   const router = useRouter();
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [selectedStore, setSelectedStore] = useState<string>('all');
+  const [selectedRange, setSelectedRange] = useState<'all' | RangeKey>('all');
 
   useEffect(() => {
     async function load() {
@@ -75,6 +87,44 @@ export default function InventoryPage() {
   if (loading) return <main>Caricamento scadenziario…</main>;
   if (error) return <main>Errore: {error}</main>;
 
+  // elenco negozi per filtro
+  const storeOptions = Array.from(
+    new Set(
+      rows
+        .map((r) => r.store?.name)
+        .filter((n): n is string => !!n)
+    )
+  );
+
+  // statistiche generali
+  const stats = rows.reduce(
+    (acc, row) => {
+      const d = daysUntil(row.expiry_date);
+      const r = classifyRange(d);
+      acc.total += 1;
+      if (r === '<=7') acc.red += 1;
+      else if (r === '8-30') acc.orange += 1;
+      else if (r === '31-90') acc.yellow += 1;
+      else acc.green += 1;
+      return acc;
+    },
+    { total: 0, red: 0, orange: 0, yellow: 0, green: 0 }
+  );
+
+  // righe visibili in base ai filtri
+  const visibleRows = rows.filter((row) => {
+    const d = daysUntil(row.expiry_date);
+    const rangeKey = classifyRange(d);
+
+    if (selectedStore !== 'all' && row.store?.name !== selectedStore) {
+      return false;
+    }
+    if (selectedRange !== 'all' && rangeKey !== selectedRange) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <main>
       <section className="page-title-card">
@@ -85,6 +135,39 @@ export default function InventoryPage() {
         </div>
       </section>
 
+      {/* Statistiche sintetiche */}
+      <section className="grid-cards" style={{ marginTop: '0.85rem' }}>
+        <div className="stat-card">
+          <div className="stat-card-title">Lotti totali monitorati</div>
+          <div className="stat-card-main">{stats.total}</div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            Tutti i lotti presenti nel sistema per la rete PetMark.
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-title">Interventi urgenti (rosso)</div>
+          <div className="stat-card-main">{stats.red}</div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            Scaduti o entro 7 giorni: da gestire prima di tutto.
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-title">Prossimi 90 giorni</div>
+          <div className="stat-card-main">{stats.orange + stats.yellow}</div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            Lotti in arancione/giallo, utili per pianificare le visite in store.
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-title">Oltre 90 giorni</div>
+          <div className="stat-card-main">{stats.green}</div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            Stock con ampia copertura: nessuna azione immediata.
+          </div>
+        </div>
+      </section>
+
+      {/* Tabella principale */}
       <section className="table-card">
         <div className="table-header">
           <div>
@@ -105,10 +188,41 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {rows.length === 0 ? (
-          <div className="table-header-sub">
-            Nessun lotto presente. Inserisci alcuni lotti di esempio in Supabase
-            per vedere lo scadenziario in azione.
+        {/* Filtri */}
+        <div className="filters-row">
+          <div className="text-xs">Filtri:</div>
+
+          <select
+            className="filter-select"
+            value={selectedStore}
+            onChange={(e) => setSelectedStore(e.target.value)}
+          >
+            <option value="all">Tutti i negozi</option>
+            {storeOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={selectedRange}
+            onChange={(e) =>
+              setSelectedRange(e.target.value as typeof selectedRange)
+            }
+          >
+            <option value="all">Tutte le scadenze</option>
+            <option value="<=7">Rosso · ≤ 7 giorni</option>
+            <option value="8-30">Arancione · 8–30 giorni</option>
+            <option value="31-90">Giallo · 31–90 giorni</option>
+            <option value=">90">Verde · &gt; 90 giorni</option>
+          </select>
+        </div>
+
+        {visibleRows.length === 0 ? (
+          <div className="table-header-sub" style={{ marginTop: '0.6rem' }}>
+            Nessun lotto da mostrare con i filtri selezionati.
           </div>
         ) : (
           <div className="table-scroll">
@@ -125,23 +239,14 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
+                {visibleRows.map((row) => {
                   const d = daysUntil(row.expiry_date);
+                  const rangeKey = classifyRange(d);
 
                   let cls = 'badge badge-ok';
-                  if (d < 0 || d <= 7) {
-                    // scaduto o entro 7 giorni → rosso
-                    cls = 'badge badge-danger';
-                  } else if (d <= 30) {
-                    // 8–30 giorni → arancione
-                    cls = 'badge badge-warn';
-                  } else if (d <= 90) {
-                    // 31–90 giorni → giallo
-                    cls = 'badge badge-soft';
-                  } else {
-                    // oltre 90 → verde
-                    cls = 'badge badge-ok';
-                  }
+                  if (rangeKey === '<=7') cls = 'badge badge-danger';
+                  else if (rangeKey === '8-30') cls = 'badge badge-warn';
+                  else if (rangeKey === '31-90') cls = 'badge badge-soft';
 
                   return (
                     <tr key={row.id}>

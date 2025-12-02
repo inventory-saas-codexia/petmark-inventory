@@ -530,3 +530,24 @@ a:hover {
   background: #bbf7d0;
   color: #166534;
 }
+
+
+/* Filtri scadenziario */
+
+.filters-row {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filter-select {
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background-color: #f9fafb;
+  color: var(--text);
+  font-size: 0.75rem;
+  padding: 0 0.8rem;
+}
