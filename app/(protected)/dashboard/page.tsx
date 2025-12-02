@@ -71,6 +71,10 @@ export default function DashboardPage() {
       <p><strong>Ruolo:</strong> {profile?.role}</p>
       <p><strong>Organization:</strong> {profile?.organization_id}</p>
       <p><strong>Store:</strong> {profile?.store_id ?? 'HQ'}</p>
+      <p style={{ marginTop: 20 }}>
+  <a href="/stores">Vai alla lista negozi</a>
+</p>
+
 
       <button
         style={{ marginTop: 20 }}
