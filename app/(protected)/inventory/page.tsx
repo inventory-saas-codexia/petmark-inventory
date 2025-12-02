@@ -20,6 +20,7 @@ type InventoryRow = {
 };
 
 type RangeKey = '<=7' | '8-30' | '31-90' | '>90';
+type ExportMode = 'filtered' | 'all' | 'urgent' | 'next90';
 
 function daysUntil(dateStr: string) {
   const target = new Date(dateStr);
@@ -35,6 +36,61 @@ function classifyRange(d: number): RangeKey {
   return '>90';
 }
 
+// Export helper: crea CSV e forza il download
+function exportRowsToCsv(rows: InventoryRow[], filename: string) {
+  if (rows.length === 0) {
+    alert('Non ci sono lotti da esportare con i filtri selezionati.');
+    return;
+  }
+
+  const header = [
+    'Negozio',
+    'Codice negozio',
+    'Prodotto',
+    'SKU',
+    'Lotto',
+    'Scadenza',
+    'Giorni alla scadenza',
+    'Quantità',
+  ];
+
+  const lines = rows.map((row) => {
+    const d = daysUntil(row.expiry_date);
+    const values = [
+      row.store?.name ?? '',
+      row.store?.code ?? '',
+      row.product?.name ?? '',
+      row.product?.sku ?? '',
+      row.batch_code ?? '',
+      row.expiry_date,
+      String(d),
+      String(row.quantity),
+    ];
+
+    // escape valori per CSV
+    return values
+      .map((v) => {
+        if (v.includes('"') || v.includes(';') || v.includes(',') || v.includes('\n')) {
+          return `"${v.replace(/"/g, '""')}"`;
+        }
+        return v;
+      })
+      .join(';'); // separatore ; per Excel in italiano
+  });
+
+  const csvContent = [header.join(';'), ...lines].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default function InventoryPage() {
   const router = useRouter();
   const [rows, setRows] = useState<InventoryRow[]>([]);
@@ -43,6 +99,7 @@ export default function InventoryPage() {
 
   const [selectedStore, setSelectedStore] = useState<string>('all');
   const [selectedRange, setSelectedRange] = useState<'all' | RangeKey>('all');
+  const [exportMode, setExportMode] = useState<ExportMode>('filtered');
 
   useEffect(() => {
     async function load() {
@@ -124,6 +181,49 @@ export default function InventoryPage() {
     }
     return true;
   });
+
+  // righe da esportare in base alla modalità scelta
+  function getRowsForExport(): InventoryRow[] {
+    if (exportMode === 'filtered') {
+      return visibleRows;
+    }
+
+    if (exportMode === 'all') {
+      return rows;
+    }
+
+    if (exportMode === 'urgent') {
+      return rows.filter((row) => {
+        const d = daysUntil(row.expiry_date);
+        const r = classifyRange(d);
+        return r === '<=7';
+      });
+    }
+
+    // next90: 8–90 giorni
+    if (exportMode === 'next90') {
+      return rows.filter((row) => {
+        const d = daysUntil(row.expiry_date);
+        const r = classifyRange(d);
+        return r === '8-30' || r === '31-90';
+      });
+    }
+
+    return rows;
+  }
+
+  function handleExportClick() {
+    const toExport = getRowsForExport();
+
+    let suffix = '';
+    if (exportMode === 'filtered') suffix = 'vista-filtrata';
+    else if (exportMode === 'all') suffix = 'tutti-i-lotti';
+    else if (exportMode === 'urgent') suffix = 'urgenti-rosso';
+    else if (exportMode === 'next90') suffix = 'prossimi-90-giorni';
+
+    const filename = `petmark-scadenziario-${suffix}.csv`;
+    exportRowsToCsv(toExport, filename);
+  }
 
   return (
     <main>
@@ -218,6 +318,37 @@ export default function InventoryPage() {
             <option value="31-90">Giallo · 31–90 giorni</option>
             <option value=">90">Verde · &gt; 90 giorni</option>
           </select>
+        </div>
+
+        {/* Export */}
+        <div className="export-row">
+          <div className="text-xs">
+            Righe visibili: <strong>{visibleRows.length}</strong> su{' '}
+            <strong>{rows.length}</strong> totali.
+          </div>
+          <div className="export-controls">
+            <select
+              className="filter-select"
+              value={exportMode}
+              onChange={(e) =>
+                setExportMode(e.target.value as ExportMode)
+              }
+            >
+              <option value="filtered">Esporta vista filtrata</option>
+              <option value="all">Esporta tutti i lotti</option>
+              <option value="urgent">Solo urgenti (rosso ≤ 7 giorni)</option>
+              <option value="next90">
+                Solo prossimi 90 giorni (8–90 giorni)
+              </option>
+            </select>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleExportClick}
+            >
+              Esporta in Excel (CSV)
+            </button>
+          </div>
         </div>
 
         {visibleRows.length === 0 ? (
