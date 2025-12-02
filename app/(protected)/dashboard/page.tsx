@@ -74,6 +74,10 @@ export default function DashboardPage() {
       <p style={{ marginTop: 20 }}>
   <a href="/stores">Vai alla lista negozi</a>
 </p>
+<p style={{ marginTop: 10 }}>
+  <a href="/inventory">Vai allo scadenziario prodotti</a>
+</p>
+
 
 
       <button
