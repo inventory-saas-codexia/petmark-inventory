@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { HeaderAuthButton } from '@/components/HeaderAuthButton';
 
 export const metadata: Metadata = {
   title: 'PetMark Inventory Cloud',
@@ -18,7 +19,6 @@ export default function RootLayout({
           <header className="app-header">
             <div className="app-header-inner">
               <div className="app-brand">
-                {/* usa direttamente il logo dell’app turni */}
                 <img
                   src="https://zerodayzeus.github.io/petmark-turni-cloud/logo-petmark.png"
                   alt="PetMark"
@@ -36,9 +36,7 @@ export default function RootLayout({
                   <span className="app-pill-dot" />
                   <span>Rete PetMark · 108 negozi</span>
                 </span>
-                <a href="/login" className="btn-primary">
-                  Accedi
-                </a>
+                <HeaderAuthButton />
               </div>
             </div>
           </header>

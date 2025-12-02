@@ -172,11 +172,11 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* Layout pagine centrato (login, ecc.) */
+/* Layout pagine centrato (login, landing) */
 
 .page-center {
   width: 100%;
-  min-height: 70vh;           /* così sta davvero centrato */
+  min-height: 70vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -501,29 +501,32 @@ a:hover {
   display: inline-flex;
   min-width: 2.4rem;
   justify-content: center;
-  padding: 0.15rem 0.45rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 500;
 }
 
+/* rosso: scaduto o entro 7 gg */
 .badge-danger {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #fecaca;
+  color: #7f1d1d;
 }
 
+/* arancio: entro 8–30 gg */
 .badge-warn {
-  background: #fef3c7;
-  color: #92400e;
+  background: #fed7aa;
+  color: #7c2d12;
 }
 
+/* giallo: entro 31–90 gg */
 .badge-soft {
-  background: #fffbeb;
-  color: #92400e;
+  background: #fef9c3;
+  color: #713f12;
 }
 
+/* verde: oltre 90 gg */
 .badge-ok {
-  background: #dcfce7;
+  background: #bbf7d0;
   color: #166534;
 }
-

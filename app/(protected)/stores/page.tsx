@@ -41,20 +41,16 @@ export default function StoresPage() {
     load();
   }, [router]);
 
-  if (loading) {
-    return <main>Caricamento negozi…</main>;
-  }
-
-  if (error) {
-    return <main>Errore: {error}</main>;
-  }
+  if (loading) return <main>Caricamento negozi…</main>;
+  if (error) return <main>Errore: {error}</main>;
 
   return (
     <main>
       <section className="page-title-card">
-        <div className="page-title-main">Negozi PetMark</div>
+        <div className="page-title-main">Negozi inclusi nel pilota</div>
         <div className="page-title-sub">
-          Elenco dei punti vendita collegati al progetto pilota Inventory Cloud.
+          Questi sono i punti vendita PetMark monitorati dallo scadenziario
+          centralizzato.
         </div>
       </section>
 
@@ -63,13 +59,16 @@ export default function StoresPage() {
           <div>
             <div className="table-header-title">Anagrafica negozi</div>
             <div className="table-header-sub">
-              {stores.length} negozi totali nel pilota.
+              {stores.length} negozi attivi nella versione demo.
             </div>
           </div>
         </div>
 
         {stores.length === 0 ? (
-          <div className="table-header-sub">Nessun negozio presente.</div>
+          <div className="table-header-sub">
+            Nessun negozio presente. Inseriscili da Supabase per popolare la
+            lista.
+          </div>
         ) : (
           <div className="table-scroll">
             <table className="data-table">

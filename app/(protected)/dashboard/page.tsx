@@ -51,18 +51,18 @@ export default function DashboardPage() {
   return (
     <main>
       <section className="page-title-card">
-        <div className="page-title-main">Benvenuto in Inventory Cloud</div>
+        <div className="page-title-main">Panoramica Inventory Cloud</div>
         <div className="page-title-sub">
-          Vista sintetica per rete PetMark: negozi, profilo utente e accessi
-          rapidi.
+          Da qui puoi accedere rapidamente a negozi e scadenziario, con una
+          vista unica per la rete PetMark.
         </div>
       </section>
 
       <section className="grid-cards">
         <div className="stat-card">
           <div className="stat-card-title">Profilo utente</div>
-          <div className="stat-card-main">ID: {profile?.id}</div>
-          <div className="text-xs" style={{ marginTop: '0.3rem' }}>
+          <div className="stat-card-main">ID utente: {profile?.id}</div>
+          <div className="text-xs" style={{ marginTop: '0.35rem' }}>
             Ruolo:{' '}
             <span className="badge badge-ok" style={{ padding: '0.1rem 0.55rem' }}>
               {profile?.role}
@@ -72,32 +72,42 @@ export default function DashboardPage() {
             Organization: {profile?.organization_id}
           </div>
           <div className="text-xs" style={{ marginTop: '0.2rem' }}>
-            Store: {profile?.store_id ?? 'HQ (centrale)'}
+            Punto di vista: {profile?.store_id ?? 'HQ (centrale)'}
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-title">Navigazione rapida</div>
+          <div className="stat-card-title">Cosa puoi fare da qui</div>
           <div className="text-xs" style={{ marginTop: '0.4rem' }}>
-            <strong>Lista negozi</strong> – visualizza i 108 punti vendita
-            collegati allo scadenziario.
+            <strong>• Negozi</strong> – vedere quali punti vendita sono inclusi
+            nel pilota e il relativo codice.
           </div>
-          <div className="text-xs" style={{ marginTop: '0.3rem' }}>
-            <strong>Scadenziario prodotti</strong> – tutti i lotti in
-            scadenza, ordinati per data.
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            <strong>• Scadenziario</strong> – consultare in un clic tutti i
+            lotti in scadenza, filtrati per negozio.
           </div>
-          <div className="stat-pill">Suggerimento: apri scadenziario prima di ogni visita in store</div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            <strong>• Estensione futura</strong> – da qui si potranno
+            aggiungere alert automatici e report periodici verso HQ.
+          </div>
+          <div className="stat-pill">
+            Suggerimento: apri lo scadenziario prima di ogni giro visite.
+          </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-title">Sessione</div>
+          <div className="stat-card-title">Sessione demo</div>
           <div className="text-xs" style={{ marginTop: '0.4rem' }}>
-            Accesso demo interno. Nessun dato viene modificato realmente sui
-            sistemi PetMark.
+            Ambiente di prova: i dati sono di esempio e non modificano i
+            sistemi operativi PetMark.
+          </div>
+          <div className="text-xs" style={{ marginTop: '0.25rem' }}>
+            Ideale per mostrare come potrebbe funzionare uno scadenziario unico
+            per tutti i negozi.
           </div>
           <button
             className="btn-danger"
-            style={{ marginTop: '0.6rem' }}
+            style={{ marginTop: '0.7rem' }}
             onClick={async () => {
               await supabase.auth.signOut();
               router.push('/login');

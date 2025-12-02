@@ -72,38 +72,43 @@ export default function InventoryPage() {
     load();
   }, [router]);
 
-  if (loading) {
-    return <main>Caricamento scadenziario…</main>;
-  }
-
-  if (error) {
-    return <main>Errore: {error}</main>;
-  }
+  if (loading) return <main>Caricamento scadenziario…</main>;
+  if (error) return <main>Errore: {error}</main>;
 
   return (
     <main>
       <section className="page-title-card">
         <div className="page-title-main">Scadenziario prodotti</div>
         <div className="page-title-sub">
-          Tutti i lotti in scadenza nella rete PetMark, ordinati per data.
+          Vista unica di tutti i lotti PetMark con data di scadenza, negozio di
+          appartenenza e quantità.
         </div>
       </section>
 
       <section className="table-card">
         <div className="table-header">
           <div>
-            <div className="table-header-title">Lotti per data di scadenza</div>
+            <div className="table-header-title">
+              Lotti ordinati per data di scadenza
+            </div>
             <div className="table-header-sub">
-              Colori: rosso = scaduto / &lt;= 7 giorni, giallo = entro 30–90 giorni,
-              verde = oltre 90 giorni.
+              <strong>Legenda:</strong>{' '}
+              <span className="badge badge-danger">≤ 7</span> rosso = scaduto o
+              entro 7 giorni ·{' '}
+              <span className="badge badge-warn">8–30</span> arancione = entro
+              8–30 giorni ·{' '}
+              <span className="badge badge-soft">31–90</span> giallo = entro
+              31–90 giorni ·{' '}
+              <span className="badge badge-ok">&gt; 90</span> verde = oltre 90
+              giorni.
             </div>
           </div>
         </div>
 
         {rows.length === 0 ? (
           <div className="table-header-sub">
-            Nessun lotto presente. Inserisci qualche lotto di test in Supabase per
-            vedere lo scadenziario.
+            Nessun lotto presente. Inserisci alcuni lotti di esempio in Supabase
+            per vedere lo scadenziario in azione.
           </div>
         ) : (
           <div className="table-scroll">
@@ -122,11 +127,21 @@ export default function InventoryPage() {
               <tbody>
                 {rows.map((row) => {
                   const d = daysUntil(row.expiry_date);
+
                   let cls = 'badge badge-ok';
-                  if (d < 0) cls = 'badge badge-danger';
-                  else if (d <= 7) cls = 'badge badge-danger';
-                  else if (d <= 30) cls = 'badge badge-warn';
-                  else if (d <= 90) cls = 'badge badge-soft';
+                  if (d < 0 || d <= 7) {
+                    // scaduto o entro 7 giorni → rosso
+                    cls = 'badge badge-danger';
+                  } else if (d <= 30) {
+                    // 8–30 giorni → arancione
+                    cls = 'badge badge-warn';
+                  } else if (d <= 90) {
+                    // 31–90 giorni → giallo
+                    cls = 'badge badge-soft';
+                  } else {
+                    // oltre 90 → verde
+                    cls = 'badge badge-ok';
+                  }
 
                   return (
                     <tr key={row.id}>

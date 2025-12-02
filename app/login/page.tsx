@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) {
-      setError(error.message);
+      setError('Credenziali non valide. Verifica email e password.');
       return;
     }
 
@@ -34,7 +34,8 @@ export default function LoginPage() {
       <div className="card card-login">
         <h1 className="card-login-title">Accedi a Inventory Cloud</h1>
         <p className="card-login-subtitle">
-          Login riservato al personale PetMark (demo interna).
+          Demo riservata al personale PetMark. Le credenziali vengono fornite
+          dal team progetto.
         </p>
 
         {error && <div className="form-error">{error}</div>}
