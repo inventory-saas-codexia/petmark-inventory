@@ -42,87 +42,71 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="rounded-2xl border border-slate-800 bg-slate-900/60 px-6 py-8">
-        <p className="text-sm text-slate-300">Caricamento dashboard…</p>
+      <main className="page-center">
+        <div>Caricamento dashboard…</div>
       </main>
     );
   }
 
   return (
-    <main className="space-y-6">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-6 py-5">
-        <h1 className="text-lg font-semibold text-slate-50">
-          Benvenuto in PetMark Inventory
-        </h1>
-        <p className="mt-1 text-xs text-slate-400">
-          Controlla a colpo d&apos;occhio negozi, lotti e scadenze critiche.
-        </p>
-      </div>
+    <main>
+      <section className="page-title-card">
+        <div className="page-title-main">Benvenuto in Inventory Cloud</div>
+        <div className="page-title-sub">
+          Vista sintetica per rete PetMark: negozi, profilo utente e accessi
+          rapidi.
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Profilo utente
+      <section className="grid-cards">
+        <div className="stat-card">
+          <div className="stat-card-title">Profilo utente</div>
+          <div className="stat-card-main">ID: {profile?.id}</div>
+          <div className="text-xs" style={{ marginTop: '0.3rem' }}>
+            Ruolo:{' '}
+            <span className="badge badge-ok" style={{ padding: '0.1rem 0.55rem' }}>
+              {profile?.role}
+            </span>
           </div>
-          <div className="mt-2 space-y-1 text-xs text-slate-300">
-            <div>
-              <span className="text-slate-400">ID: </span>
-              {profile?.id}
-            </div>
-            <div>
-              <span className="text-slate-400">Ruolo: </span>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
-                {profile?.role}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-400">Organization: </span>
-              {profile?.organization_id}
-            </div>
-            <div>
-              <span className="text-slate-400">Store: </span>
-              {profile?.store_id ?? 'HQ'}
-            </div>
+          <div className="text-xs" style={{ marginTop: '0.3rem' }}>
+            Organization: {profile?.organization_id}
+          </div>
+          <div className="text-xs" style={{ marginTop: '0.2rem' }}>
+            Store: {profile?.store_id ?? 'HQ (centrale)'}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Navigazione rapida
+        <div className="stat-card">
+          <div className="stat-card-title">Navigazione rapida</div>
+          <div className="text-xs" style={{ marginTop: '0.4rem' }}>
+            <strong>Lista negozi</strong> – visualizza i 108 punti vendita
+            collegati allo scadenziario.
           </div>
-          <div className="mt-3 flex flex-col gap-2 text-xs">
-            <a
-              href="/stores"
-              className="inline-flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 hover:border-slate-600 hover:bg-slate-800/70"
-            >
-              <span>Lista negozi</span>
-              <span className="text-slate-500">108 negozi</span>
-            </a>
-            <a
-              href="/inventory"
-              className="inline-flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 hover:border-slate-600 hover:bg-slate-800/70"
-            >
-              <span>Scadenziario prodotti</span>
-              <span className="text-slate-500">Lotti in scadenza</span>
-            </a>
+          <div className="text-xs" style={{ marginTop: '0.3rem' }}>
+            <strong>Scadenziario prodotti</strong> – tutti i lotti in
+            scadenza, ordinati per data.
           </div>
+          <div className="stat-pill">Suggerimento: apri scadenziario prima di ogni visita in store</div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Sessione
+        <div className="stat-card">
+          <div className="stat-card-title">Sessione</div>
+          <div className="text-xs" style={{ marginTop: '0.4rem' }}>
+            Accesso demo interno. Nessun dato viene modificato realmente sui
+            sistemi PetMark.
           </div>
           <button
+            className="btn-danger"
+            style={{ marginTop: '0.6rem' }}
             onClick={async () => {
               await supabase.auth.signOut();
               router.push('/login');
             }}
-            className="mt-3 inline-flex items-center rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-200 hover:bg-red-500/20"
           >
             Logout
           </button>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

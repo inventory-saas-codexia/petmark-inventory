@@ -63,11 +63,8 @@ export default function InventoryPage() {
         )
         .order('expiry_date', { ascending: true });
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setRows((data || []) as unknown as InventoryRow[]);
-      }
+      if (error) setError(error.message);
+      else setRows((data || []) as unknown as InventoryRow[]);
 
       setLoading(false);
     }
@@ -76,119 +73,85 @@ export default function InventoryPage() {
   }, [router]);
 
   if (loading) {
-    return (
-      <main className="rounded-2xl border border-slate-800 bg-slate-900/60 px-6 py-8">
-        <p className="text-sm text-slate-300">Caricamento scadenziario…</p>
-      </main>
-    );
+    return <main>Caricamento scadenziario…</main>;
   }
 
   if (error) {
-    return (
-      <main className="rounded-2xl border border-slate-800 bg-slate-900/60 px-6 py-8">
-        <p className="text-sm text-red-300">Errore: {error}</p>
-      </main>
-    );
+    return <main>Errore: {error}</main>;
   }
 
   return (
-    <main className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-50">
-            Scadenziario prodotti
-          </h1>
-          <p className="text-xs text-slate-400">
-            Lotti ordinati per data di scadenza su tutti i negozi PetMark.
-          </p>
+    <main>
+      <section className="page-title-card">
+        <div className="page-title-main">Scadenziario prodotti</div>
+        <div className="page-title-sub">
+          Tutti i lotti in scadenza nella rete PetMark, ordinati per data.
         </div>
-      </div>
+      </section>
 
-      <p className="text-[11px] text-slate-400">
-        Colori:{' '}
-        <span className="font-medium text-red-400">scaduto</span>,{' '}
-        <span className="font-medium text-orange-400">≤ 7 giorni</span>,{' '}
-        <span className="font-medium text-amber-400">≤ 30</span>,{' '}
-        <span className="font-medium text-yellow-400">≤ 90</span>,{' '}
-        <span className="font-medium text-emerald-400">&gt; 90</span>
-      </p>
-
-      {rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 px-4 py-6 text-sm text-slate-400">
-          Nessun lotto trovato. Aggiungi movimenti di magazzino per vedere lo
-          scadenziario.
+      <section className="table-card">
+        <div className="table-header">
+          <div>
+            <div className="table-header-title">Lotti per data di scadenza</div>
+            <div className="table-header-sub">
+              Colori: rosso = scaduto / &lt;= 7 giorni, giallo = entro 30–90 giorni,
+              verde = oltre 90 giorni.
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60">
-          <table className="min-w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900/80 text-[11px] uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Negozio</th>
-                <th className="px-4 py-3">Prodotto</th>
-                <th className="px-4 py-3">SKU</th>
-                <th className="px-4 py-3">Lotto</th>
-                <th className="px-4 py-3">Scadenza</th>
-                <th className="px-4 py-3 text-right">Giorni</th>
-                <th className="px-4 py-3 text-right">Qty</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const d = daysUntil(row.expiry_date);
 
-                const badgeClasses =
-                  d < 0
-                    ? 'bg-red-500/10 text-red-300'
-                    : d <= 7
-                    ? 'bg-orange-500/10 text-orange-300'
-                    : d <= 30
-                    ? 'bg-amber-500/10 text-amber-300'
-                    : d <= 90
-                    ? 'bg-yellow-500/10 text-yellow-300'
-                    : 'bg-emerald-500/10 text-emerald-300';
+        {rows.length === 0 ? (
+          <div className="table-header-sub">
+            Nessun lotto presente. Inserisci qualche lotto di test in Supabase per
+            vedere lo scadenziario.
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Negozio</th>
+                  <th>Prodotto</th>
+                  <th>SKU</th>
+                  <th>Lotto</th>
+                  <th>Scadenza</th>
+                  <th style={{ textAlign: 'right' }}>Giorni</th>
+                  <th style={{ textAlign: 'right' }}>Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const d = daysUntil(row.expiry_date);
+                  let cls = 'badge badge-ok';
+                  if (d < 0) cls = 'badge badge-danger';
+                  else if (d <= 7) cls = 'badge badge-danger';
+                  else if (d <= 30) cls = 'badge badge-warn';
+                  else if (d <= 90) cls = 'badge badge-soft';
 
-                return (
-                  <tr
-                    key={row.id}
-                    className="border-t border-slate-800/70 hover:bg-slate-800/60"
-                  >
-                    <td className="px-4 py-2">
-                      <div className="text-xs font-medium text-slate-200">
-                        {row.store?.name}
-                      </div>
-                      {row.store?.code && (
-                        <div className="text-[11px] text-slate-500">
-                          {row.store.code}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 text-xs">{row.product?.name}</td>
-                    <td className="px-4 py-2 text-xs text-slate-400">
-                      {row.product?.sku}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-slate-300">
-                      {row.batch_code}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-slate-300">
-                      {row.expiry_date}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <span
-                        className={`inline-flex min-w-[3rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badgeClasses}`}
-                      >
-                        {d}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right text-xs">
-                      {row.quantity}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  return (
+                    <tr key={row.id}>
+                      <td>
+                        <strong>{row.store?.name}</strong>
+                        {row.store?.code && (
+                          <span className="text-xs"> ({row.store.code})</span>
+                        )}
+                      </td>
+                      <td>{row.product?.name}</td>
+                      <td>{row.product?.sku}</td>
+                      <td>{row.batch_code}</td>
+                      <td>{row.expiry_date}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className={cls}>{d}</span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>{row.quantity}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </main>
   );
 }

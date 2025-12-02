@@ -18,7 +18,6 @@ export default function StoresPage() {
 
   useEffect(() => {
     async function load() {
-      // controllo login
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -33,11 +32,8 @@ export default function StoresPage() {
         .select('id, name, code')
         .order('name', { ascending: true });
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setStores(data || []);
-      }
+      if (error) setError(error.message);
+      else setStores(data || []);
 
       setLoading(false);
     }
@@ -46,34 +42,55 @@ export default function StoresPage() {
   }, [router]);
 
   if (loading) {
-    return (
-      <main style={{ padding: 40 }}>
-        <p>Caricamento negozi…</p>
-      </main>
-    );
+    return <main>Caricamento negozi…</main>;
   }
 
   if (error) {
-    return (
-      <main style={{ padding: 40 }}>
-        <p style={{ color: 'red' }}>Errore: {error}</p>
-      </main>
-    );
+    return <main>Errore: {error}</main>;
   }
 
   return (
-    <main style={{ padding: 40 }}>
-      <h1>Negozi PetMark</h1>
+    <main>
+      <section className="page-title-card">
+        <div className="page-title-main">Negozi PetMark</div>
+        <div className="page-title-sub">
+          Elenco dei punti vendita collegati al progetto pilota Inventory Cloud.
+        </div>
+      </section>
 
-      {stores.length === 0 && <p>Nessun negozio trovato.</p>}
+      <section className="table-card">
+        <div className="table-header">
+          <div>
+            <div className="table-header-title">Anagrafica negozi</div>
+            <div className="table-header-sub">
+              {stores.length} negozi totali nel pilota.
+            </div>
+          </div>
+        </div>
 
-      <ul>
-        {stores.map((s) => (
-          <li key={s.id} style={{ marginBottom: 4 }}>
-            <strong>{s.name}</strong> {s.code && <span>({s.code})</span>}
-          </li>
-        ))}
-      </ul>
+        {stores.length === 0 ? (
+          <div className="table-header-sub">Nessun negozio presente.</div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Codice</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stores.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.name}</td>
+                    <td>{s.code ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
