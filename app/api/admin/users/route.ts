@@ -1,228 +1,304 @@
-// app/api/admin/users/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// ID organizzazione PetMark (preso dalla tabella "profiles")
-const ORG_ID = '042dc385-f734-4496-8a37-b665a42e946e';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-type ProfileRow = {
-  id: string;
-  role: string | null;
-  store_id: string | null;
-};
+if (!supabaseUrl || !serviceKey) {
+  console.warn(
+    '⚠️ NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY mancanti per /api/admin/users'
+  );
+}
 
-type StoreRow = {
-  id: string;
-  name: string;
-  code: string | null;
-};
+function getAdminClient() {
+  return createClient(supabaseUrl, serviceKey!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
-// GET: lista utenti con profilo e negozio
-export async function GET() {
+// GET: lista utenti per organizzazione
+export async function GET(request: Request) {
   try {
-    const { data: usersData, error: usersErr } =
-      await supabaseAdmin.auth.admin.listUsers({
+    const url = new URL(request.url);
+    const orgId = url.searchParams.get('orgId');
+
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'orgId mancante' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = getAdminClient();
+
+    // 1) Profili
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select(
+        'id, role, store_id, area_id, organization_id, created_at'
+      )
+      .eq('organization_id', orgId);
+
+    if (profilesError) {
+      return NextResponse.json(
+        { error: profilesError.message },
+        { status: 500 }
+      );
+    }
+
+    const userIds = (profiles ?? []).map((p: any) => p.id);
+
+    // 2) Users auth (admin)
+    const { data: usersData, error: usersError } =
+      await supabase.auth.admin.listUsers({
         page: 1,
         perPage: 1000,
       });
 
-    if (usersErr) {
-      console.error('usersErr', usersErr);
+    if (usersError) {
       return NextResponse.json(
-        { error: 'Errore nel recupero utenti' },
+        { error: usersError.message },
         { status: 500 }
       );
     }
 
-    const { data: profilesData, error: profilesErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id, role, store_id');
+    const userMap = new Map(
+      (usersData?.users ?? [])
+        .filter((u: any) => userIds.includes(u.id))
+        .map((u: any) => [u.id, u])
+    );
 
-    if (profilesErr) {
-      console.error('profilesErr', profilesErr);
-      return NextResponse.json(
-        { error: 'Errore nel recupero profili' },
-        { status: 500 }
-      );
-    }
+    // 3) Stores
+    const storeIds = Array.from(
+      new Set(
+        (profiles ?? [])
+          .map((p: any) => p.store_id)
+          .filter((x: any) => !!x)
+      )
+    );
 
-    const { data: storesData, error: storesErr } = await supabaseAdmin
+    const { data: stores, error: storesError } = await supabase
       .from('stores')
-      .select('id, name, code');
+      .select('id, name, code')
+      .in('id', storeIds.length ? storeIds : ['00000000-0000-0000-0000-000000000000']);
 
-    if (storesErr) {
-      console.error('storesErr', storesErr);
+    if (storesError) {
       return NextResponse.json(
-        { error: 'Errore nel recupero negozi' },
+        { error: storesError.message },
         { status: 500 }
       );
     }
 
-    const profiles = (profilesData || []) as ProfileRow[];
-    const stores = (storesData || []) as StoreRow[];
+    const storeMap = new Map(
+      (stores ?? []).map((s: any) => [s.id, s])
+    );
 
-    const users = (usersData?.users || []).map((u) => {
-      const p = profiles.find((pr) => pr.id === u.id);
-      const store = p ? stores.find((s) => s.id === p.store_id) : undefined;
+    // 4) Areas
+    const areaIds = Array.from(
+      new Set(
+        (profiles ?? [])
+          .map((p: any) => p.area_id)
+          .filter((x: any) => !!x)
+      )
+    );
+
+    const { data: areas, error: areasError } = await supabase
+      .from('areas')
+      .select('id, name')
+      .in('id', areaIds.length ? areaIds : ['00000000-0000-0000-0000-000000000000']);
+
+    if (areasError) {
+      return NextResponse.json(
+        { error: areasError.message },
+        { status: 500 }
+      );
+    }
+
+    const areaMap = new Map(
+      (areas ?? []).map((a: any) => [a.id, a])
+    );
+
+    const result = (profiles ?? []).map((p: any) => {
+      const u = userMap.get(p.id);
+      const s = p.store_id ? storeMap.get(p.store_id) : null;
+      const a = p.area_id ? areaMap.get(p.area_id) : null;
+
+      const meta = u?.user_metadata ?? {};
+      const disabled = meta?.disabled === true;
 
       return {
-        id: u.id,
-        email: u.email,
-        role: p?.role ?? null,
-        store_id: p?.store_id ?? null,
-        store_name: store?.name ?? null,
-        store_code: store?.code ?? null,
+        id: p.id,
+        email: u?.email ?? '',
+        role: p.role,
+        store_id: p.store_id,
+        store_name: s?.name ?? null,
+        store_code: s?.code ?? null,
+        area_name: a?.name ?? null,
+        disabled,
+        created_at: p.created_at,
       };
     });
 
-    return NextResponse.json({ users });
-  } catch (err: any) {
-    console.error('GET /api/admin/users ERR', err);
+    return NextResponse.json({ users: result }, { status: 200 });
+  } catch (e: any) {
+    console.error('/api/admin/users GET error', e);
     return NextResponse.json(
-      { error: 'Errore interno server' },
+      { error: e?.message ?? 'Errore sconosciuto' },
       { status: 500 }
     );
   }
 }
 
-// POST: crea nuovo utente + profilo
-export async function POST(req: NextRequest) {
+// POST: azione su utente
+export async function POST(request: Request) {
   try {
-    const body = await req.json();
-    const {
-      email,
-      password,
-      role,
-      store_id,
-    }: { email: string; password: string; role: string; store_id: string | null } =
-      body;
+    const body = await request.json();
+    const { action, user_id } = body as {
+      action: string;
+      user_id: string;
+      [key: string]: any;
+    };
 
-    if (!email || !password || !role) {
+    if (!action || !user_id) {
       return NextResponse.json(
-        { error: 'email, password e ruolo sono obbligatori' },
+        { error: 'action e user_id sono obbligatori.' },
         { status: 400 }
       );
     }
 
-    // crea utente auth
-    const { data: newUserData, error: createErr } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
+    const supabase = getAdminClient();
+
+    // ---- attiva / disattiva ----
+    if (action === 'toggleActive') {
+      const { disabled } = body as { disabled: boolean };
+
+      const { error } = await supabase.auth.admin.updateUserById(user_id, {
+        user_metadata: { disabled },
       });
 
-    if (createErr || !newUserData?.user) {
-      console.error('createErr', createErr);
-      return NextResponse.json(
-        { error: 'Errore nella creazione utente', detail: createErr?.message },
-        { status: 500 }
-      );
-    }
-
-    const userId = newUserData.user.id;
-
-    // crea profilo (qui DEVE esserci organization_id)
-    const { error: profileErr } = await supabaseAdmin.from('profiles').insert({
-      id: userId,
-      role,
-      store_id: store_id || null,
-      organization_id: ORG_ID,
-    });
-
-    if (profileErr) {
-      console.error('profileErr (POST insert)', profileErr);
-      return NextResponse.json(
-        {
-          error: 'Utente creato ma errore nella creazione profilo',
-          detail: profileErr.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (err: any) {
-    console.error('POST /api/admin/users ERR', err);
-    return NextResponse.json(
-      { error: 'Errore interno server', detail: String(err?.message || err) },
-      { status: 500 }
-    );
-  }
-}
-
-// PATCH: aggiorna ruolo / store_id nel profilo
-export async function PATCH(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const {
-      id,
-      role,
-      store_id,
-    }: { id: string; role: string | null; store_id: string | null } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'id utente mancante' },
-        { status: 400 }
-      );
-    }
-
-    // 1) vediamo se il profilo ESISTE già
-    const { data: existing, error: selErr } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (selErr) {
-      console.error('profiles select ERR', selErr);
-      return NextResponse.json(
-        { error: 'Errore nel recupero profilo', detail: selErr.message },
-        { status: 500 }
-      );
-    }
-
-    if (!existing) {
-      // 2) se non esiste → INSERT con organization_id
-      const { error: insErr } = await supabaseAdmin.from('profiles').insert({
-        id,
-        role,
-        store_id,
-        organization_id: ORG_ID,
-      });
-
-      if (insErr) {
-        console.error('profiles insert (PATCH) ERR', insErr);
+      if (error) {
         return NextResponse.json(
-          { error: 'Errore nella creazione profilo', detail: insErr.message },
+          { error: error.message },
           { status: 500 }
         );
       }
-    } else {
-      // 3) se esiste → UPDATE solo di role e store_id (organization_id resta com’è)
-      const { error: updErr } = await supabaseAdmin
+
+      return NextResponse.json(
+        { ok: true, disabled },
+        { status: 200 }
+      );
+    }
+
+    // ---- update profilo (ruolo + negozio, area derivata dal negozio) ----
+    if (action === 'updateProfile') {
+      const { role, store_id } = body as {
+        role: string;
+        store_id: string | null;
+      };
+
+      let area_id: string | null = null;
+
+      if (store_id) {
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('area_id')
+          .eq('id', store_id)
+          .single();
+
+        if (storeError) {
+          return NextResponse.json(
+            { error: storeError.message },
+            { status: 500 }
+          );
+        }
+
+        area_id = (storeData as any)?.area_id ?? null;
+      }
+
+      const { error } = await supabase
         .from('profiles')
         .update({
           role,
-          store_id,
+          store_id: store_id || null,
+          area_id,
         })
-        .eq('id', id);
+        .eq('id', user_id);
 
-      if (updErr) {
-        console.error('profiles update ERR', updErr);
+      if (error) {
         return NextResponse.json(
-          { error: 'Errore nell’aggiornamento profilo', detail: updErr.message },
+          { error: error.message },
           { status: 500 }
         );
       }
+
+      return NextResponse.json({ ok: true }, { status: 200 });
     }
 
-    return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    console.error('PATCH /api/admin/users ERR', err);
+    // ---- reset password ----
+    if (action === 'resetPassword') {
+      const { new_password } = body as { new_password: string };
+
+      if (!new_password) {
+        return NextResponse.json(
+          { error: 'new_password mancante.' },
+          { status: 400 }
+        );
+      }
+
+      const { error } = await supabase.auth.admin.updateUserById(user_id, {
+        password: new_password,
+      });
+
+      if (error) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
+
+    // ---- elimina utente ----
+    if (action === 'deleteUser') {
+      // prima profilo, poi auth (per sicurezza FK)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user_id);
+
+      if (profileError) {
+        return NextResponse.json(
+          { error: profileError.message },
+          { status: 500 }
+        );
+      }
+
+      const { error: authError } = await supabase.auth.admin.deleteUser(
+        user_id
+      );
+
+      if (authError) {
+        return NextResponse.json(
+          { error: authError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
+
     return NextResponse.json(
-      { error: 'Errore interno server', detail: String(err?.message || err) },
+      { error: 'Azione non supportata.' },
+      { status: 400 }
+    );
+  } catch (e: any) {
+    console.error('/api/admin/users POST error', e);
+    return NextResponse.json(
+      { error: e?.message ?? 'Errore sconosciuto' },
       { status: 500 }
     );
   }
