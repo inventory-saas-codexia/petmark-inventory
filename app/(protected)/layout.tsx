@@ -29,8 +29,8 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <span>➕</span>
           </a>
             <a href="/accounts" className="protected-nav-link">
+            <span>Crea </span>
             <span>Account</span>
-            <span>admin</span>
           </a>
 
         </nav>
