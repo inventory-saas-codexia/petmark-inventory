@@ -4,7 +4,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <div className="protected-layout">
       <aside className="protected-sidebar">
-        <div>
+        <div className="protected-sidebar-header">
           <div className="protected-sidebar-title">Console PetMark</div>
           <div className="protected-sidebar-sub">Inventory &amp; Scadenze</div>
         </div>
@@ -12,8 +12,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
         <nav className="protected-nav">
           <a href="/dashboard" className="protected-nav-link">
             <span>Dashboard</span>
-            <span>⤵</span>
+            <span className="protected-nav-icon">⤵</span>
           </a>
+
           <a href="/stores" className="protected-nav-link">
             <span>Negozi</span>
             <span className="protected-nav-count">108</span>
@@ -24,15 +25,15 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <span className="protected-nav-count">lotti</span>
           </a>
 
-           <a href="/intake" className="protected-nav-link">
+          <a href="/intake" className="protected-nav-link">
             <span>Carico lotti negozio</span>
-            <span>➕</span>
-          </a>
-            <a href="/accounts" className="protected-nav-link">
-            <span>Crea </span>
-            <span>Account</span>
+            <span className="protected-nav-icon">➕</span>
           </a>
 
+          <a href="/accounts" className="protected-nav-link">
+            <span>Crea</span>
+            <span>account</span>
+          </a>
         </nav>
 
         <div className="protected-sidebar-footer">

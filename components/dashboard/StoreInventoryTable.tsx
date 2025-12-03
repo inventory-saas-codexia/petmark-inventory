@@ -1,200 +1,146 @@
 'use client';
 
-import type { StoreInventoryItem } from '@/lib/hooks/useStoreInventory';
+import React from 'react';
 
-interface StoreInventoryTableProps {
-  items: StoreInventoryItem[];
+/**
+ * Riga di inventario per la vista negozio.
+ * Puoi adattare i nomi dei campi se i tuoi dati sono leggermente diversi.
+ */
+export interface StoreInventoryRow {
+  id: string;
+  product_name: string;
+  sku: string;
+  brand: string | null;
+  expiry_date: string; // ISO date string (es. "2025-10-19")
+  quantity: number;
+  batch_code: string | null;
 }
 
-function getExpiryStyle(days: number | null) {
-  // ritorno: label + colori inline
-  if (days === null) {
-    return {
-      label: 'N/D',
-      backgroundColor: '#E5E7EB', // grigio chiaro
-      color: '#374151',           // grigio scuro
-    };
-  }
+/**
+ * Calcola giorni alla scadenza (negativo = già scaduto)
+ */
+function getDaysToExpiry(expiryDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  if (days < 0) {
-    return {
-      label: `Scaduto da ${Math.abs(days)}g`,
-      backgroundColor: '#FEE2E2', // rosso chiaro
-      color: '#B91C1C',           // rosso scuro
-    };
-  }
+  const exp = new Date(expiryDate);
+  exp.setHours(0, 0, 0, 0);
 
-  if (days === 0) {
-    return {
-      label: 'Scade oggi',
-      backgroundColor: '#FEE2E2',
-      color: '#B91C1C',
-    };
-  }
-
-  if (days <= 30) {
-    return {
-      label: `Tra ${days}g`,
-      backgroundColor: '#FEF3C7', // ambra chiaro
-      color: '#92400E',
-    };
-  }
-
-  if (days <= 90) {
-    return {
-      label: `Tra ${days}g`,
-      backgroundColor: '#DBEAFE', // azzurro chiaro
-      color: '#1D4ED8',
-    };
-  }
-
-  return {
-    label: `Tra ${days}g`,
-    backgroundColor: '#DCFCE7', // verde chiaro
-    color: '#166534',
-  };
+  const diffMs = exp.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays;
 }
 
-export function StoreInventoryTable({ items }: StoreInventoryTableProps) {
-  if (items.length === 0) {
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const dd = d.getDate().toString().padStart(2, '0');
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+function getStatusLabel(daysToExpiry: number): { label: string; color: string } {
+  if (daysToExpiry < 0) {
+    return { label: `Scaduto da ${Math.abs(daysToExpiry)}g`, color: '#B91C1C' }; // rosso
+  }
+  if (daysToExpiry <= 30) {
+    return { label: `In scadenza (${daysToExpiry}g)`, color: '#B45309' }; // arancio
+  }
+  if (daysToExpiry <= 90) {
+    return { label: `OK (${daysToExpiry}g)`, color: '#15803D' }; // verde medio
+  }
+  return { label: `Lungo termine (${daysToExpiry}g)`, color: '#047857' }; // verde più scuro
+}
+
+export interface StoreInventoryTableProps {
+  batches: StoreInventoryRow[];
+}
+
+/**
+ * Tabella inventario vista negozio (Store Manager).
+ * Responsive grazie alle classi:
+ *  - responsive-table-wrapper
+ *  - responsive-table
+ * definite in globals.css
+ */
+export function StoreInventoryTable({ batches }: StoreInventoryTableProps) {
+  if (!batches || batches.length === 0) {
     return (
-      <p style={{ fontSize: '14px', color: '#4B5563' }}>
+      <p className="text-sm text-gray-600">
         Nessun lotto presente per questo negozio.
       </p>
     );
   }
 
-  // stili base
-  const wrapperStyle: React.CSSProperties = {
-    borderRadius: 12,
-    border: '1px solid #F9A8D4',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    boxShadow: '0 8px 20px rgba(15,23,42,0.06)',
-    overflow: 'hidden',
-  };
-
-  const tableContainerStyle: React.CSSProperties = {
-    maxHeight: 540,
-    overflowX: 'auto',
-    overflowY: 'auto',
-  };
-
-  const tableStyle: React.CSSProperties = {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '14px',
-  };
-
-  const theadStyle: React.CSSProperties = {
-    backgroundColor: '#FDF2F8', // rosa chiarissimo
-  };
-
-  const headerCellStyle: React.CSSProperties = {
-    padding: '8px 12px',
-    fontWeight: 600,
-    color: '#374151',
-    textAlign: 'left' as const,
-    borderBottom: '1px solid #E5E7EB',
-    whiteSpace: 'nowrap' as const,
-  };
-
-  const rowBaseStyle: React.CSSProperties = {
-    borderTop: '1px solid #E5E7EB',
-    color: '#111827',
-    transition: 'background-color 120ms ease-out',
-  };
-
-  const cellStyle: React.CSSProperties = {
-    padding: '8px 12px',
-    verticalAlign: 'middle',
-  };
-
-  const footerStyle: React.CSSProperties = {
-    borderTop: '1px solid #E5E7EB',
-    padding: '6px 12px',
-    fontSize: '11px',
-    color: '#6B7280',
-  };
+  // Ordino per data scadenza ascendente
+  const sorted = [...batches].sort((a, b) => {
+    return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+  });
 
   return (
-    <div style={wrapperStyle}>
-      <div style={tableContainerStyle}>
-        <table style={tableStyle}>
-          <thead style={theadStyle}>
-            <tr>
-              <th style={headerCellStyle}>Prodotto</th>
-              <th style={headerCellStyle}>SKU</th>
-              <th style={headerCellStyle}>Brand</th>
-              <th style={headerCellStyle}>Scadenza</th>
-              <th style={headerCellStyle}>Stato</th>
-              <th style={{ ...headerCellStyle, textAlign: 'right' }}>Quantità</th>
-              <th style={headerCellStyle}>Lotto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, idx) => {
-              const isEven = idx % 2 === 0;
-              const expiry = getExpiryStyle(item.daysToExpiry);
+    <div className="responsive-table-wrapper" style={{ marginTop: 8 }}>
+      <table
+        className="responsive-table"
+        style={{ borderCollapse: 'collapse', fontSize: 13 }}
+      >
+        <thead>
+          <tr
+            style={{
+              backgroundColor: '#F9FAFB',
+              borderBottom: '1px solid #E5E7EB',
+            }}
+          >
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Prodotto</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>SKU</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Brand</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Scadenza</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Stato</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Quantità</th>
+            <th style={{ padding: '6px 8px', textAlign: 'left' }}>Lotto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((row, idx) => {
+            const daysToExpiry = getDaysToExpiry(row.expiry_date);
+            const status = getStatusLabel(daysToExpiry);
 
-              const rowStyle: React.CSSProperties = {
-                ...rowBaseStyle,
-                backgroundColor: isEven ? '#FFFFFF' : '#F9FAFB',
-              };
-
-              return (
-                <tr
-                  key={item.id}
-                  style={rowStyle}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                      '#FEF2F2';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLTableRowElement).style.backgroundColor =
-                      isEven ? '#FFFFFF' : '#F9FAFB';
-                  }}
-                >
-                  <td style={cellStyle}>
-                    <span style={{ fontWeight: 500 }}>{item.product_name}</span>
-                  </td>
-                  <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>
-                    {item.product_sku ?? '—'}
-                  </td>
-                  <td style={cellStyle}>{item.product_brand ?? '—'}</td>
-                  <td style={{ ...cellStyle, whiteSpace: 'nowrap' }}>
-                    {item.expiry_date
-                      ? new Date(item.expiry_date).toLocaleDateString()
-                      : '—'}
-                  </td>
-                  <td style={cellStyle}>
-                    <span
-                      style={{
-                        backgroundColor: expiry.backgroundColor,
-                        color: expiry.color,
-                        borderRadius: 999,
-                        padding: '2px 8px',
-                        fontSize: '11px',
-                        fontWeight: 500,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {expiry.label}
-                    </span>
-                  </td>
-                  <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 600 }}>
-                    {item.quantity}
-                  </td>
-                  <td style={cellStyle}>{item.batch_code ?? '—'}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <div style={footerStyle}>
-        Totale lotti: <span style={{ fontWeight: 600 }}>{items.length}</span>
-      </div>
+            return (
+              <tr
+                key={row.id}
+                style={{
+                  backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                  borderTop: '1px solid #E5E7EB',
+                }}
+              >
+                <td style={{ padding: '6px 8px' }}>{row.product_name}</td>
+                <td style={{ padding: '6px 8px' }}>{row.sku}</td>
+                <td style={{ padding: '6px 8px' }}>{row.brand ?? '—'}</td>
+                <td style={{ padding: '6px 8px' }}>
+                  {formatDate(row.expiry_date)}
+                </td>
+                <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>
+                  <span
+                    style={{
+                      borderRadius: 999,
+                      padding: '2px 8px',
+                      fontSize: 11,
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      color: status.color,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {status.label}
+                  </span>
+                </td>
+                <td style={{ padding: '6px 8px' }}>{row.quantity}</td>
+                <td style={{ padding: '6px 8px' }}>
+                  {row.batch_code ?? '—'}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

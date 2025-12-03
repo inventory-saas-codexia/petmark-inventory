@@ -148,6 +148,45 @@ a:hover {
   box-shadow: none;
 }
 
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: #ffffff;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  color: var(--text);
+}
+
+/* bottone logout / danger */
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+}
+
 /* Layout contenuto */
 
 .app-main {
@@ -279,110 +318,104 @@ a:hover {
   margin-top: 0.5rem;
 }
 
-/* --- Layout area protetta (dopo login) --- */
+/* ===========================
+   Layout area protetta / Console
+   =========================== */
+
+/* layout base: sidebar + main */
 
 .protected-layout {
-  display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
-  gap: 1.25rem;
+  display: flex;
+  gap: 24px;
   align-items: flex-start;
 }
 
-@media (max-width: 800px) {
-  .protected-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.protected-main {
+  flex: 1;
+  min-width: 0;
 }
 
+/* card laterale */
+
 .protected-sidebar {
+  width: 280px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 14px 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  border: 1px solid #fee2e2;
+
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: #ffffff;
-  padding: 0.9rem 0.9rem 0.9rem;
   font-size: 0.8rem;
 }
 
+.protected-sidebar-header {
+  margin-bottom: 8px;
+}
+
 .protected-sidebar-title {
-  font-size: 0.7rem;
-  text-transform: uppercase;
+  font-size: 12px;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  text-transform: uppercase;
+  color: #6b7280;
   font-weight: 600;
 }
 
 .protected-sidebar-sub {
-  font-size: 0.8rem;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 0.2rem;
+  color: #111827;
+  margin-top: 2px;
 }
 
 .protected-sidebar-footer {
-  margin-top: 0.6rem;
-  padding-top: 0.6rem;
+  margin-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  font-size: 12px;
+  color: #6b7280;
 }
 
-/* NAV PROTETTA – pilloline rosse PetMark */
+/* Nav pill buttons */
 
 .protected-nav {
-  margin-top: 0.7rem;
+  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  overflow-x: auto;
-  padding-bottom: 0.2rem;
-}
-
-.protected-nav::-webkit-scrollbar {
-  height: 4px;
+  gap: 8px;
 }
 
 .protected-nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;                 /* spazio tra testo e valore */
-  padding: 0.35rem 0.8rem;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 500;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  font-size: 13px;
+  color: #b91c1c;
   text-decoration: none;
-
-  background: var(--petmark-red-soft);
-  color: var(--petmark-red-dark);
-  border: 1px solid var(--petmark-red-soft-border);
-
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.08s ease;
+  white-space: nowrap;
 }
 
-/* numero / valore (es. 108, lotti) */
+.protected-nav-link:hover {
+  background: #fee2e2;
+}
+
 .protected-nav-count {
-  font-weight: 600;
-  opacity: 0.85;
-}
-
-/* hover */
-.protected-nav-link:hover,
-.protected-nav-link:focus-visible {
-  background: #ffd2da;
-  color: var(--petmark-red-dark);
-  box-shadow: 0 0 0 1px var(--petmark-red-soft-border);
-}
-
-/* stato attivo opzionale (se da TSX aggiungi .active) */
-.protected-nav-link.active {
-  background: var(--petmark-red);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f97373;
   color: #ffffff;
-  border-color: var(--petmark-red-dark);
-  box-shadow: 0 0 0 1px var(--petmark-red-dark);
+}
+
+.protected-nav-icon {
+  font-size: 12px;
 }
 
 /* area principale */
@@ -452,26 +485,6 @@ a:hover {
   background: #f9fafb;
   font-size: 0.7rem;
   color: var(--text-muted);
-}
-
-/* bottone logout */
-
-.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid #fecaca;
-  background: #fee2e2;
-  color: #b91c1c;
-  font-size: 0.7rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-danger:hover {
-  background: #fecaca;
 }
 
 /* Tabelle */
@@ -606,30 +619,52 @@ a:hover {
   align-items: center;
 }
 
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  font-size: 0.7rem;
-  font-weight: 500;
+/* ===========================
+   PM helper: pagine / card / form
+   =========================== */
+
+.pm-card {
   background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.pm-section-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.pm-section-subtitle {
+  font-size: 14px;
   color: var(--text-muted);
-  cursor: pointer;
 }
 
-.btn-secondary:hover {
-  background: #f9fafb;
-  color: var(--text);
+/* form a 2 colonne su desktop */
+
+.pm-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-/* ============================
-   Responsive layout – tablet & mobile
-   ============================ */
+/* tabelle riutilizzabili (utenti + vista negozio + scadenzario) */
 
-/* Tablet e schermi medi */
+.responsive-table-wrapper {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* ===========================
+   Responsive – desktop → tablet
+   =========================== */
+
 @media (max-width: 1024px) {
   .app-main-inner {
     padding: 1.1rem 0.9rem 2rem;
@@ -649,7 +684,117 @@ a:hover {
   }
 }
 
-/* Mobile principale */
+/* ===========================
+   Responsive – tablet / mobile
+   =========================== */
+
+@media (max-width: 900px) {
+  body {
+    font-size: 14px;
+  }
+
+  main {
+    padding: 12px !important;
+  }
+
+  .pm-card {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .pm-section-title {
+    font-size: 18px;
+  }
+
+  .pm-section-subtitle {
+    font-size: 12px;
+  }
+
+  /* form: da 2 colonne a una colonna */
+  .pm-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* statistiche scadenzario in colonna */
+  .grid-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stat-card {
+    width: 100%;
+  }
+
+  /* filtri / export scadenzario */
+  .filters-row,
+  .export-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filters-row .filter-select,
+  .export-row .filter-select {
+    width: 100%;
+  }
+
+  .export-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: stretch;
+  }
+
+  .export-controls .filter-select,
+  .export-controls .btn-secondary {
+    width: 100%;
+  }
+
+  /* tabelle: font e padding ridotti */
+  .responsive-table {
+    font-size: 12px;
+    min-width: 640px; /* scroll orizzontale pulito */
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 4px 6px !important;
+  }
+
+  /* console petmark: sidebar sopra, nav a 2 per riga */
+  .protected-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .protected-sidebar {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .protected-sidebar-sub {
+    font-size: 13px;
+  }
+
+  .protected-sidebar-footer {
+    font-size: 11px;
+  }
+
+  .protected-nav {
+    flex-wrap: wrap;
+  }
+
+  .protected-nav-link {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: space-between;
+  }
+}
+
+/* Mobile principale (<=768) – piccoli aggiustamenti generali */
+
 @media (max-width: 768px) {
   .app-main-inner {
     padding: 0.9rem 0.75rem 1.8rem;
@@ -666,12 +811,6 @@ a:hover {
   .page-title-card {
     padding: 0.7rem 0.8rem;
     margin-bottom: 0.6rem;
-  }
-
-  .grid-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
   }
 
   .stat-card {
@@ -710,10 +849,6 @@ a:hover {
     gap: 0.7rem;
   }
 
-  .form-field {
-    width: 100%;
-  }
-
   .form-label {
     font-size: 0.7rem;
     margin-bottom: 0.15rem;
@@ -725,44 +860,16 @@ a:hover {
     height: 2.35rem;
   }
 
-  .filters-row,
-  .export-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .export-controls {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .filter-select {
-    width: 100%;
-  }
-
   .btn-primary,
   .btn-secondary,
   .btn-danger {
     width: 100%;
     justify-content: center;
   }
-
-  /* nav protetta mobile: pillole scrollabili */
-  .protected-nav {
-    flex-wrap: nowrap;
-    gap: 0.35rem;
-  }
-
-  .protected-nav-link {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 0.3rem 0.7rem;
-    font-size: 0.76rem;
-  }
 }
 
 /* Mobile piccolo (iPhone SE, ecc.) */
+
 @media (max-width: 480px) {
   .app-main-inner {
     padding: 0.75rem 0.6rem 1.6rem;
@@ -788,5 +895,10 @@ a:hover {
 
   .text-xs {
     font-size: 0.65rem;
+  }
+
+  /* console: una pillola per riga */
+  .protected-nav-link {
+    flex: 1 1 100%;
   }
 }
