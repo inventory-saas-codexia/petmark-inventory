@@ -30,6 +30,12 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <span className="protected-nav-icon">➕</span>
           </a>
 
+          {/* nuovo bottone per importare i prodotti da CSV */}
+          <a href="/products/import" className="protected-nav-link">
+            <span>Import</span>
+            <span>prodotti</span>
+          </a>
+
           <a href="/accounts" className="protected-nav-link">
             <span>Crea</span>
             <span>account</span>
