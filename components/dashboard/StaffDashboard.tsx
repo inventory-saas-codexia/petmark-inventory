@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import type { Profile } from '@/lib/types/profile';
 import { useStoreInventory } from '@/lib/hooks/useStoreInventory';
-import { StoreInventoryTable } from './StoreInventoryTable';
+import StoreInventoryTable from './StoreInventoryTable';
 
 type FilterKey = 'all' | 'expired' | 'next30' | 'next90' | 'over90';
 
