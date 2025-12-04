@@ -141,8 +141,8 @@ export default function InventoryPage() {
     load();
   }, [router]);
 
-  if (loading) return <main>Caricamento scadenziario…</main>;
-  if (error) return <main>Errore: {error}</main>;
+  if (loading) return <main className="pm-page">Caricamento scadenziario…</main>;
+  if (error) return <main className="pm-page">Errore: {error}</main>;
 
   // elenco negozi per filtro
   const storeOptions = Array.from(
@@ -226,8 +226,8 @@ export default function InventoryPage() {
   }
 
   return (
-    <main>
-      <section className="page-title-card">
+    <main className="pm-page">
+      <section className="page-title-card pm-card">
         <div className="page-title-main">Scadenziario prodotti</div>
         <div className="page-title-sub">
           Vista unica di tutti i lotti PetMark con data di scadenza, negozio di
@@ -236,7 +236,10 @@ export default function InventoryPage() {
       </section>
 
       {/* Statistiche sintetiche */}
-      <section className="grid-cards" style={{ marginTop: '0.85rem' }}>
+      <section
+        className="grid-cards pm-card"
+        style={{ marginTop: '0.85rem' }}
+      >
         <div className="stat-card">
           <div className="stat-card-title">Lotti totali monitorati</div>
           <div className="stat-card-main">{stats.total}</div>
@@ -268,7 +271,7 @@ export default function InventoryPage() {
       </section>
 
       {/* Tabella principale */}
-      <section className="table-card">
+      <section className="table-card pm-card">
         <div className="table-header">
           <div>
             <div className="table-header-title">
@@ -356,8 +359,8 @@ export default function InventoryPage() {
             Nessun lotto da mostrare con i filtri selezionati.
           </div>
         ) : (
-          <div className="table-scroll">
-            <table className="data-table">
+          <div className="table-scroll responsive-table-wrapper">
+            <table className="data-table responsive-table">
               <thead>
                 <tr>
                   <th>Negozio</th>

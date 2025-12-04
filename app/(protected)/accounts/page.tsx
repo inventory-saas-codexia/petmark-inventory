@@ -30,7 +30,6 @@ export default function AccountAdminPage() {
   const { profile, loading: profileLoading, error: profileError } =
     useCurrentProfile();
 
-  // --- stato per form creazione ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<CreatableRole>('staff');
@@ -40,24 +39,20 @@ export default function AccountAdminPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [createSuccess, setCreateSuccess] = useState<string | null>(null);
 
-  // --- aree ---
   const [areas, setAreas] = useState<AreaOption[]>([]);
   const [areasLoading, setAreasLoading] = useState(true);
 
-  // --- negozi ---
   const {
     stores,
     loading: storesLoading,
     error: storesError,
   } = useStoresForScope(profile?.organization_id ?? null, null);
 
-  // --- elenco utenti ---
   const [users, setUsers] = useState<UserRow[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  // carica aree
   useEffect(() => {
     if (!profile?.organization_id) {
       setAreas([]);
@@ -91,7 +86,6 @@ export default function AccountAdminPage() {
     };
   }, [profile?.organization_id]);
 
-  // ruoli possibili
   const allowedRoles: CreatableRole[] = useMemo(() => {
     if (!profile) return ['staff'];
     if (profile.role === 'hq') return ['staff', 'store_manager', 'area_manager'];
@@ -100,7 +94,6 @@ export default function AccountAdminPage() {
     return ['staff'];
   }, [profile]);
 
-  // --- fetch utenti ---
   async function fetchUsers() {
     if (!profile?.organization_id) return;
 
@@ -165,7 +158,6 @@ export default function AccountAdminPage() {
     }
   }, [profile?.organization_id]);
 
-  // filtro ricerca
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return users;
@@ -178,7 +170,6 @@ export default function AccountAdminPage() {
     });
   }, [users, search]);
 
-  // --- submit creazione utente ---
   async function handleCreateSubmit(e: React.FormEvent) {
     e.preventDefault();
     setCreateError(null);
@@ -260,7 +251,6 @@ export default function AccountAdminPage() {
     }
   }
 
-  // azioni sugli utenti
   async function toggleDisabled(user: UserRow) {
     try {
       const res = await fetch('/api/admin/users', {
@@ -310,7 +300,6 @@ export default function AccountAdminPage() {
         return;
       }
 
-      // ricarico da backend così area/negozio sono allineati
       fetchUsers();
     } catch (e: any) {
       alert(e?.message ?? 'Errore sconosciuto.');
@@ -366,7 +355,7 @@ export default function AccountAdminPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error ?? 'Errore durante l\'eliminazione utente.');
+        alert(data.error ?? "Errore durante l'eliminazione utente.");
         return;
       }
 
@@ -376,7 +365,6 @@ export default function AccountAdminPage() {
     }
   }
 
-  // render base
   if (profileLoading) {
     return <div className="p-6">Caricamento profilo...</div>;
   }
@@ -426,24 +414,19 @@ export default function AccountAdminPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Gestione utenti</h1>
-      <p className="text-sm text-gray-600">
+    <div className="pm-page p-6 space-y-6">
+      <h1 className="pm-section-title text-2xl font-semibold">
+        Gestione utenti
+      </h1>
+      <p className="pm-section-subtitle text-sm text-gray-600">
         Crea nuovi account e gestisci utenti esistenti (disattiva, modifica ruolo/negozio, reset password, elimina).
       </p>
 
       {/* FORM CREAZIONE */}
-      <div style={cardStyle}>
+      <div className="pm-card" style={cardStyle}>
         <h2 className="text-lg font-semibold mb-3">Crea nuovo utente</h2>
 
-        <form
-          onSubmit={handleCreateSubmit}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 12,
-          }}
-        >
+        <form onSubmit={handleCreateSubmit} className="pm-form-grid">
           <div>
             <label style={labelStyle}>Email</label>
             <input
@@ -575,17 +558,18 @@ export default function AccountAdminPage() {
       </div>
 
       {/* ELENCO UTENTI */}
-      <div style={cardStyle}>
+      <div className="pm-card" style={cardStyle}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             marginBottom: 8,
             gap: 8,
+            alignItems: 'center',
           }}
         >
           <h2 className="text-lg font-semibold">Elenco utenti</h2>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <input
               type="text"
               placeholder="Cerca per email / negozio / area"
@@ -619,15 +603,9 @@ export default function AccountAdminPage() {
             Nessun utente trovato per questi criteri.
           </p>
         ) : (
-          <div
-            style={{
-              maxHeight: 420,
-              overflowY: 'auto',
-              overflowX: 'auto',
-              marginTop: 4,
-            }}
-          >
+          <div className="responsive-table-wrapper">
             <table
+              className="responsive-table"
               style={{
                 width: '100%',
                 borderCollapse: 'collapse',
